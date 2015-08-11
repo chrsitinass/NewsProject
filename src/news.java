@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-public class news {
+public class News {
 	public String title;
 	public String URL;
 	public int news_id = -1;
@@ -18,7 +18,7 @@ public class news {
 	private ArrayList entityList;
 	public String outer_id; 	//source_id
 	public String category;
-	public news(String title, String URL, String source, Timestamp pubtime, int topic, String content, String contentWithURL, ArrayList entityList, String outer_id, String category){
+	public News(String title, String URL, String source, Timestamp pubtime, int topic, String content, String contentWithURL, ArrayList entityList, String outer_id, String category){
 		this.title = title;
 		this.URL = URL;
 		this.source = source;

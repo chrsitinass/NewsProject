@@ -1,7 +1,7 @@
 
-public class entityToTopic {
+public class EntityToTopic {
 	public int x,y;
-	public entityToTopic(int x, int y){
+	public EntityToTopic(int x, int y){
 		this.x = x;
 		this.y = y;
 	}
@@ -10,7 +10,7 @@ public class entityToTopic {
             return true;  
         if(obj == null)//
             return false;             
-        entityToTopic pair = (entityToTopic)obj;  
+        EntityToTopic pair = (EntityToTopic)obj;
         if(this.x != pair.x)  
             return false;  
         if(this.y != pair.y)  

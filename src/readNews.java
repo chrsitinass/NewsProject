@@ -24,7 +24,7 @@ import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.ling.CoreLabel;
 import java.util.*;
 
-public class readNews {
+public class ReadNews {
 	private String folder;
 	private String fileName;
 	private String serializedClassifier;
@@ -37,10 +37,10 @@ public class readNews {
 	private Topic topic;
 	private String category;
 
-	public void saveTopic(Map <entityToTopic,Integer> entity_topic, Statement statm) throws SQLException{
-		Iterator <entityToTopic> iter = entity_topic.keySet().iterator();
+	public void saveTopic(Map <EntityToTopic,Integer> entity_topic, Statement statm) throws SQLException{
+		Iterator <EntityToTopic> iter = entity_topic.keySet().iterator();
 		while (iter.hasNext()){
-			entityToTopic key = iter.next();
+			EntityToTopic key = iter.next();
 			int value = entity_topic.get(key);
 			String sql = "insert into entity_topic_history (entity_id, topic_id, count) values (" +
                     key.x + "," + key.y + "," + value + ")";
@@ -87,7 +87,7 @@ public class readNews {
 		File f = new File(fileName);
         Document document = db.parse(f);
         NodeList docList = document.getElementsByTagName("item");
-        Map <entityToTopic,Integer> entity_topic = new HashMap<entityToTopic,Integer>();
+        Map <EntityToTopic,Integer> entity_topic = new HashMap<EntityToTopic,Integer>();
 
         /* step 3: 解析xml
          * format:
@@ -117,7 +117,7 @@ public class readNews {
             Element content_node = (Element) content_node_list.item(0);
             String title  = getCharacterDataFromElement(title_node);
             String content = getCharacterDataFromElement(content_node);
-            
+
             // TODO: fix topic modular
             // int topic = this.topic.get_topic(title);
             int topic = -1;
@@ -141,7 +141,7 @@ public class readNews {
             	ArrayList entityList = (ArrayList)res.get(1);
             	for (int j = 0; j < entityList.size(); j += 1) {
             		int entity = (int)entityList.get(j);
-            		entityToTopic ett = new entityToTopic(entity,topic);
+            		EntityToTopic ett = new EntityToTopic(entity,topic);
             		if (!entity_topic.containsKey(ett))
             			entity_topic.put(ett, 1);
             		else{
@@ -149,14 +149,14 @@ public class readNews {
             			entity_topic.put(ett, num);
             		}
             	}
-            	news basicNews = new news(title, URL, source, pubtime, topic, content, contentWithUrl, entityList,
+            	News basicNews = new News(title, URL, source, pubtime, topic, content, contentWithUrl, entityList,
                         outer_id, category);
             	basicNews.save(statm);
             } catch(Exception e) {}
         }
         // saveTopic(entity_topic, statm);
 	}
-	public readNews(String folder, String fileName, String ip, String dbUser, String dbPassword)
+	public ReadNews(String folder, String fileName, String ip, String dbUser, String dbPassword)
             throws ClassCastException, ClassNotFoundException, IOException, SQLException {
 		this.folder = folder;
 		this.fileName = fileName;
@@ -178,7 +178,7 @@ public class readNews {
 			for (File f: files) {
 				String fileName = f.getPath();
 				System.out.println(fileName);
-				readNews rn = new readNews(folder, fileName, "172.31.19.9", "root", "");
+				ReadNews rn = new ReadNews(folder, fileName, "172.31.19.9", "root", "");
 				try {
 					rn.read();   
 				}
