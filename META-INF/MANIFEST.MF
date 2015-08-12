@@ -3,5 +3,5 @@ Class-Path: lib/ansj_seg-2.0.7.jar lib/ansj_seg-2.0.7-min.jar lib/mysq
  l-connector-java-5.1.26-bin.jar lib/nlp-lang-0.3.jar lib/stanford-ner
  -3.4.1.jar lib/stanford-ner-3.4.1-javadoc.jar lib/stanford-ner-3.4.1-
  sources.jar
-Main-Class: readNews
+Main-Class: ReadNews
 
