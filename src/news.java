@@ -16,9 +16,10 @@ public class News {
 	public String content;
 	public String contentWithURL;
 	private ArrayList entityList;
-	public String outer_id; 	//source_id
+	public String outer_id;
 	public String category;
-	public News(String title, String URL, String source, Timestamp pubtime, int topic, String content, String contentWithURL, ArrayList entityList, String outer_id, String category){
+	public News(String title, String URL, String source, Timestamp pubtime, int topic, String content,
+				String contentWithURL, ArrayList entityList, String outer_id, String category){
 		this.title = title;
 		this.URL = URL;
 		this.source = source;
@@ -39,7 +40,7 @@ public class News {
 		return res;
 	}
 	public int save(Statement statm) throws SQLException{
-		String sql = "insert into news (title, URL, source, pubtime, topic_id, content, content_with_url, outer_id," +
+		String sql = "insert into temp_news (title, URL, source, pubtime, topic_id, content, content_with_url, outer_id," +
                 " category) values ('" + mysqlFilter(this.title) + "','" + this.URL + "','" + this.source + "','" +
                 pubtime + "'," + topic_id + ",'" + mysqlFilter(content)+ "','" + mysqlFilter(contentWithURL) + "','" +
                 mysqlFilter(outer_id) + "','" + mysqlFilter(category) + "')";
@@ -55,6 +56,7 @@ public class News {
 			this.news_id = rs.getInt(1);
 		}
 		else return -1;
+		/*
 		for (int i = 0; i < entityList.size(); i += 1){
 			sql = "insert into entity_news_history (entity_id, news_id) values (" +
 					(int)entityList.get(i) + "," + this.news_id + ")";
@@ -73,6 +75,7 @@ public class News {
 				continue;
 			}
 		}
+		*/
 		return this.news_id;
 	}
 }

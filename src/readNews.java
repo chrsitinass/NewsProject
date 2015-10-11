@@ -1,4 +1,3 @@
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -170,17 +169,20 @@ public class ReadNews {
 		this.topic = new Topic(this.mysql, "data/match.xml");
 	}
 	public static void main(String[] args) throws Exception {
-		String folder = "/media/damon/SinaNews/xmlOut/";
-		// String folder = "xmlOut";
+		String folder = "/home/fengys/NewsCrawler/output/";
+		if (args.length > 1) folder = args[0];
         File file = new File(folder);
 		File[] files = file.listFiles();
 		if (files != null) {
 			for (File f: files) {
 				String fileName = f.getPath();
 				System.out.println(fileName);
+				// Change database
+				// ReadNews rn = new ReadNews(folder, fileName, "172.31.19.37", "fengys", "fengyS2013");
+				// ReadNews rn = new ReadNews(folder, fileName, "172.31.19.9", "root", "");
 				ReadNews rn = new ReadNews(folder, fileName, "172.31.19.9", "root", "");
 				try {
-					rn.read();   
+					rn.read();
 				}
 				catch(Exception e) {
 					System.out.println(e);
