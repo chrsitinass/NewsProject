@@ -43,7 +43,7 @@ public class News {
 		String sql = "insert into temp_news (title, URL, source, pubtime, topic_id, content, content_with_url, outer_id," +
                 " category) values ('" + mysqlFilter(this.title) + "','" + this.URL + "','" + this.source + "','" +
                 pubtime + "'," + topic_id + ",'" + mysqlFilter(content)+ "','" + mysqlFilter(contentWithURL) + "','" +
-                mysqlFilter(outer_id) + "','" + mysqlFilter(category) + "')";
+                outer_id + "','" + mysqlFilter(category) + "')";
 		System.out.println(this.outer_id);
 		try{
 			statm.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);

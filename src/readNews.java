@@ -104,7 +104,7 @@ public class ReadNews {
             Element element = (Element)docList.item(i);
             String outer_id = element.getElementsByTagName("id").item(0).getFirstChild().getNodeValue();
             String URL = element.getElementsByTagName("link").item(0).getFirstChild().getNodeValue();
-            Timestamp pubtime = new Timestamp(System.currentTimeMillis());
+            Timestamp pubtime;
             String temp_pubtime = element.getElementsByTagName("pubDate").item(0).getFirstChild().getNodeValue();
             pubtime = Timestamp.valueOf(temp_pubtime);
             String category = element.getElementsByTagName("category").item(0).getFirstChild().getNodeValue();
@@ -179,7 +179,6 @@ public class ReadNews {
 				System.out.println(fileName);
 				// Change database
 				// ReadNews rn = new ReadNews(folder, fileName, "172.31.19.37", "fengys", "fengyS2013");
-				// ReadNews rn = new ReadNews(folder, fileName, "172.31.19.9", "root", "");
 				ReadNews rn = new ReadNews(folder, fileName, "172.31.19.9", "root", "");
 				try {
 					rn.read();
