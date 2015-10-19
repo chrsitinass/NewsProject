@@ -44,7 +44,7 @@ public class News {
                 {"社会\\_资讯频道\\_凤凰网", "社会新闻", "社会频道\\_新华网", "网易社会新闻"},
                 {"国内新闻", "国内要闻", "网易国内新闻", "大陆\\_资讯频道\\_凤凰网", "地方新闻"},
                 {"体育频道\\_凤凰网", "体育", "体育频道\\_新华网", "体育新闻", "综合体育-网易体育频道", "体育新闻"},
-                {"港澳台新闻", "台湾新闻", "台湾\\_资讯频道\\_凤凰网"},
+                {"港澳台新闻", "台湾新闻", "台湾\\_资讯频道\\_凤凰网", "港澳台"},
                 {"网易教育新闻资讯", "教育新闻", "留学频道\\_新华网"},
                 {"网易娱乐频道", "娱乐新闻"},
                 {"旅游热点\\_网易旅游频道"},
@@ -71,9 +71,9 @@ public class News {
     public int save(Statement statm) throws SQLException{
         category = category.trim();
         String sql = "insert into temp_news (title, URL, source, pubtime, topic_id, content, content_with_url, outer_id," +
-                " category) values ('" + mysqlFilter(this.title) + "','" + this.URL + "','" + this.source + "','" +
+                " category, cate) values ('" + mysqlFilter(this.title) + "','" + this.URL + "','" + this.source + "','" +
                 pubtime + "'," + topic_id + ",'" + mysqlFilter(content)+ "','" + mysqlFilter(contentWithURL) + "','" +
-                outer_id + "','" + trans(category) + "')";
+                outer_id + "','" + category + "','" + trans(category) + "')";
         System.out.println(this.outer_id);
         try {
             statm.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
