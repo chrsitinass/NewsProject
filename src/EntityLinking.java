@@ -39,187 +39,146 @@ public class EntityLinking {
 		EntityLinking one = new EntityLinking("172.31.19.9", "root", "");
 		//String result = one.FillLinks(sb.toString(), 0, 2);
 		//System.out.println(result);
-		/*
-		sb.setLength(0);
-		sb.append("<html>");
-		sb.append("<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">");
-		sb.append("<head><title>Html Test</title></head><body>");
-	    sb.append(result);
-	    sb.append("</body></html>");
-	    */
-		//System.out.println(result);
-		//deleteFile(folder + "test.html");
-		//addFile(sb.toString(), folder + "test.html");
 	}
 
 	static Pattern tag = Pattern.compile("<wi( ([^ >]{1,}))+>");
 	private Mysql mysql;
 	/**
-	 * inputType = 0 : PlainString
-	 * inputType = 1 : NERedString
-	 * outputType = 0 : html
-	 * outputType = 1 : NER
 	 * @param content
 	 * @param mysqlIp
 	 * @param type
 	 * @return
 	 */
-	
+
 	public EntityLinking(String mysqlIp, String dbUser, String dbPassword){
 		mysql = new Mysql("newsProject", mysqlIp, dbUser, dbPassword);
 	}
-	public ArrayList FillLinks(String Content, int inputType, int outputType)
+
+	/*
+	 * 2016-1-16 update by husen
+	 * Notice:
+	 * 1. The "rawContent" should be NERed before call this function.
+	 * 2. "inputType" and "outputType" are unused.
+	 * Modify:
+	 * 1. Delete useless codes.
+	 * 2. Simplify the logic.
+	 * 3. Fix some format errors.
+	 * */
+	public ArrayList FillLinks(String rawContent, int inputType, int outputType)
 	{
-		//if(inputType == 0)
-		//	Content = ANSJsegmentSeg(Content);
-		String content = Content.replaceAll("''", "\"");
-		
-		HashMap<String, Integer> candiId = new HashMap<String, Integer>();
-		HashMap<String, Integer> EntityMap = new HashMap<String, Integer>(); 
-		GetEntities(EntityMap, content, inputType);
-		ArrayList entityList = null; 
-		try {
-			String entityString = "";
-			Iterator<Entry<String, Integer>> it = EntityMap.entrySet().iterator();
+		ArrayList res = new ArrayList();
+
+		// Fix some format errors.
+		String content = rawContent.replaceAll("`", "'");
+		content = content.replaceAll("''", "\"");
+		content = content.replaceAll("《 ", "《/O ");
+		content = content.replaceAll("》 ", "》/O ");
+
+		HashMap<String, Integer> candidateWithEntityId = new HashMap<String, Integer>();
+		HashMap<String, Integer> candidateWithOccurCnt = new HashMap<String, Integer>();
+
+		// This "entityList" is unknown, unused and useless now. I want to delete it but rejected by ZengShen.
+		ArrayList entityList = null;
+
+		// Get <"NE word", "occur count"> from content. The "occur count" is not used by now, but it may be useful in further.
+		candidateWithOccurCnt = GetEntities(content);
+		if(candidateWithOccurCnt == null || candidateWithOccurCnt.size() == 0)
+			return res;
+
+		try
+		{
+			String candidatesStr = "";
+			Iterator<Entry<String, Integer>> it = candidateWithOccurCnt.entrySet().iterator();
 			while(it.hasNext())
 			{
 				Entry<String, Integer> next = it.next();
-				if(entityString.equals(""))
-					entityString += "'" + next.getKey() + "'";
-				else {
-					entityString += ", '" + next.getKey() + "'";
-					//break;
-				}
+				if(candidatesStr.equals(""))
+					candidatesStr += "'" + next.getKey() + "'";
+				else
+					candidatesStr += ", '" + next.getKey() + "'";
 			}
-			entityString = "(" + entityString + ")";
+
 			String sql = "select keyword, entityList, FreqList, id"
-					+ " from entity where keyword in ";
-			sql += entityString;
-			//System.out.println(entityString);
-			//System.out.println(sql);
+					+ " from entity where keyword in (" + candidatesStr + ")";
 			Statement statm = mysql.conn.createStatement();
-			try{
-				ResultSet resultS = statm.executeQuery(sql);
-				entityList = AddElement(candiId, resultS);
-			} catch(Exception e) {
-			}
-		} catch (SQLException e) {
+			ResultSet resultS = statm.executeQuery(sql);
+
+			entityList = AddElement(candidateWithEntityId, resultS);
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		String result = "";
-		String regex = "</wi> ";
-		if(inputType == 0)
-			regex = " ";
-		for(String word : content.split(regex))
+		String delimiter = " ";
+
+		for(String word : content.split(delimiter))
 		{
 			String PlainWord = word;
-			//System.out.println(PlainWord);
-			if(inputType == 1)
-				PlainWord = word.substring(word.indexOf(">") + 1);
-			else {
-				if (word.indexOf("/")!=-1)
-					PlainWord = word.substring(0,word.indexOf("/"));
-				else{
-					result += word;
-					continue;
-				}
-			}
-			
-			int pageId = 0;
-			if(inputType == 1)
+
+			if (word.indexOf("/")!=-1)
+				PlainWord = word.substring(0,word.indexOf("/"));
+			else
 			{
-				Matcher m = tag.matcher(word);
-				if(m.find())
-				{
-					if(m.group(2).endsWith("\"O\"") == false && m.group(2).endsWith("\"MISC\"") == false)
-					{
-						if(candiId.containsKey(PlainWord))
-						{
-							pageId = candiId.get(PlainWord);
-						}
-					}
-				}
+				result += word;
+				continue;
 			}
-			else if(inputType == 0)
+
+			int pageId = 0; //An entity's pageId is also its entityId.
+
+			// This word is NE, and we has got its entityId.
+			if(!word.substring(word.indexOf("/")+1).equals("O") && !word.substring(word.indexOf("/")+1).equals("MISC") && candidateWithEntityId.containsKey(PlainWord))
 			{
-				if(!word.substring(word.indexOf("/")+1).equals("O") && !word.substring(word.indexOf("/")+1).equals("MISC") && candiId.containsKey(PlainWord))
-				{
-					pageId = candiId.get(PlainWord);
-				}
+				pageId = candidateWithEntityId.get(PlainWord);
 			}
-			if(pageId > 0 && word.indexOf("\n")==-1){
-				String info = null;
-				
-				if(outputType == 0)
-					info = "<a href=\"http://zh.wikipedia.org/wiki?curid="
-						+ pageId + "\">" + PlainWord + "</a>";
-				else if(outputType == 1)
-					info = word.substring(0, word.indexOf(">")) + " zhwikiURL=\"" +
-							"http://zh.wikipedia.org/wiki?curid=" + pageId + "\">" +
-							PlainWord + "</wi>";
-				else if (outputType==2)
-					info = word + "/" + "url=\"http://zh.wikipedia.org/wiki?curid=" + pageId + "\"\n";
-				
+
+			result += word;
+			if(pageId > 0 && word.indexOf("\n") == -1)
+			{
+				String info = "/" + "url=\"http://zh.wikipedia.org/wiki?curid=" + pageId + "\"";
 				result += info;
-				
 			}
-			else{
-				if(outputType == 0)
-					result += PlainWord;
-				else if(outputType == 1)
-					result += word.substring(0, word.indexOf(">")) + " zhwikiURL=\"" +
-							"\">" + PlainWord + "</wi>";
-				else if (outputType==2)
-					result += word + " ";
-			}
+
+			result += " ";
 		}
-		ArrayList res = new ArrayList();
+
 		res.add(result);
 		res.add(entityList);
+
 		return res;
 	}
-	private void GetEntities(HashMap<String, Integer> entityMap,
-			String content, int inputType) {
-		// TODO Auto-generated method stub
-		String regex = "</wi> ";
-		if(inputType == 0)
-			regex = " ";
-		for(String word : content.split(regex))
+
+	private HashMap<String, Integer> GetEntities(String content)
+	{
+		HashMap<String, Integer> entityMap = new HashMap<String, Integer>();
+
+		String delimiter = " ";
+		for(String word : content.split(delimiter))
 		{
 			Matcher m = tag.matcher(word);
 			String PlainWord;
-			
-			if (inputType==1)
-				PlainWord = word.substring(word.indexOf(">") + 1);
-			else {
-				word = word.replaceAll("/O", "");
-				word = word.replaceAll("/MISC", "");
-				if (word.indexOf("/")!=-1)
-					PlainWord = word.substring(0,word.indexOf("/"));
-				else{
-					continue;
-				}
-			}
-				
-			while(inputType == 1 && m.find())
-			{
-				if((m.group(2).endsWith("\"O\"") == false) && (m.group(2).endsWith("\"MISC\"") == false))
-				{
-					entityMap.put(PlainWord.replaceAll("'", "\\\\'"), 0);
-				}
-			}
-			if(inputType == 0) {
-				// System.out.println(PlainWord);
+
+			word = word.replaceAll("/O", "");
+			word = word.replaceAll("/MISC", "");
+			if (word.indexOf("/")!=-1)
+				PlainWord = word.substring(0,word.indexOf("/"));
+			else
+				continue;
+
+			if(!entityMap.containsKey(PlainWord.replaceAll("'", "\\\\'")))
 				entityMap.put(PlainWord.replaceAll("'", "\\\\'"), 0);
-			}
+			else
+				entityMap.put(PlainWord.replaceAll("'", "\\\\'"), entityMap.get(PlainWord.replaceAll("'", "\\\\'"))+1);
 		}
-		
+
+		return entityMap;
 	}
-	private ArrayList AddElement(HashMap<String, Integer> candiId, ResultSet result) {
-		// TODO Auto-generated method stub
-		ArrayList entityList = new ArrayList(); 
-		try {
+
+	private ArrayList AddElement(HashMap<String, Integer> candiId, ResultSet result)
+	{
+		ArrayList entityList = new ArrayList();
+		try
+		{
 			while(result != null && result.next())
 			{
 				String []entities = result.getString(2).split(",");
@@ -239,25 +198,13 @@ public class EntityLinking {
 				}
 				candiId.put(result.getString(1), maxEntity);
 			}
-		} catch (NumberFormatException | SQLException e) {
+		}
+		catch (NumberFormatException | SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return entityList;
 	}
-
-	private static String ANSJsegmentSeg(String content) {
-		// TODO Auto-generated method stub		
-		content = content.replaceAll("<[^>]{1,}>", "").replaceAll(" ", "");
-		List<Term> seg = NlpAnalysis.parse(content);
-		String oneOut = "";
-		for(Term term : seg)
-		{
-			oneOut += term.getName() + " ";
-		}
-		return oneOut;
-	}
-	
 
 	private static BufferedReader getBufferedReader(String path) {
 		try{
@@ -275,39 +222,4 @@ public class EntityLinking {
 			return null;
 		}
 	}
-	private static void addFile(String string, String path) {
-		if(string == null || string.equals(""))
-			return;
-		try{
-			File file=new File(path);
-			if(!file.exists()){
-				if(file.createNewFile() == false)
-					System.out.println("path not exist: " + path);
-			}
-			OutputStreamWriter osw=
-					new OutputStreamWriter(new FileOutputStream(file,true),"utf-8");
-			osw.append(string);
-			osw.close();
-		}catch(Exception e){
-			System.out.println(path);
-			e.printStackTrace();
-		}		
-	}
-	private static void deleteFile(String path) {
-		
-		try{
-			File file=new File(path);
-			if(!file.exists()){
-				System.out.println("file " + file.getName() + " not exist, can't delete!");
-			}
-			else if (file.isFile() == true){
-				String name = file.getName();
-				file.delete();
-				System.out.println("delete " + name + " successfully!");
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
-	
 }
